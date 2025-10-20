@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CEFS Manlleu · Ràdio en directe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --prim:#f7b500;     /* groc CEFS */
+      --sec:#d21f3c;      /* vermell CEFS */
+      --bg:#0b0f14;
+      --card:#101722;
+      --text:#eef2f5;
+      --muted:#9fb0c3;
+      --ok:#2ad37a;
+      --warn:#ffb703;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:
+        radial-gradient(1200px 600px at 80% -10%, #1b2533 0%, transparent 60%),
+        radial-gradient(900px 500px at 0% 100%, #121b27 0%, transparent 60%),
+        linear-gradient(180deg,#0a0e13 0%, #0b111a 100%);
+      color:var(--text); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+    .card{
+      width:min(900px,92vw); border-radius:20px; background:
+        linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      box-shadow:0 20px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+      backdrop-filter: blur(8px);
+      overflow:hidden;
+    }
+    .header{
+      display:flex; gap:16px; align-items:center; padding:20px 22px; border-bottom:1px solid rgba(255,255,255,.06);
+      background: linear-gradient(90deg, rgba(242,185,0,.18), rgba(210,31,60,.18));
+    }
+    .logo{
+      width:64px; height:64px; border-radius:14px; background:#111; display:grid; place-items:center; overflow:hidden;
+      border:3px solid #fff2; box-shadow:0 8px 20px rgba(0,0,0,.25);
+    }
+    .logo img{width:100%; height:100%; object-fit:cover}
+    .titles{line-height:1.1}
+    .club{font-family:Montserrat,Inter,sans-serif; font-weight:800; letter-spacing:.3px; font-size:1.4rem}
+    .tag{font-weight:600; color:var(--muted); font-size:.95rem}
+
+    .now{
+      padding:18px 22px; display:flex; align-items:center; gap:14px; border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .dot{width:10px; height:10px; border-radius:50%; background:var(--ok); box-shadow:0 0 12px var(--ok)}
+    .now strong{font-weight:700}
+    .song{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff}
+
+    .player{
+      padding:22px; display:grid; grid-template-columns: 1fr auto; gap:22px; align-items:center;
+    }
+    .controls{display:flex; align-items:center; gap:16px; flex-wrap:wrap}
+    .btn{
+      width:74px; height:74px; border:none; border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, #fff 0%, #ffe9 40%, #fff0 41%) , linear-gradient(135deg, var(--prim), var(--sec));
+      color:#111; font-weight:800; font-size:0; cursor:pointer; position:relative;
+      box-shadow:0 10px 30px rgba(210,31,60,.35), 0 8px 14px rgba(247,181,0,.25);
+      transition: transform .08s ease;
+    }
+    .btn:active{ transform: scale(.98) }
+    .btn .icon{ position:absolute; inset:0; display:grid; place-items:center; }
+    .btn .play{ width:0; height:0; border-left:20px solid #111; border-top:12px solid transparent; border-bottom:12px solid transparent; margin-left:6px}
+    .btn .pause{ display:none; width:20px; height:20px;}
+    .btn .pause::before, .btn .pause::after{
+      content:""; display:block; width:6px; height:20px; background:#111; border-radius:2px; box-shadow:8px 0 0 #111;
+    }
+    .btn.playing .play{display:none}
+    .btn.playing .pause{display:block}
+
+    .vol{ display:flex; align-items:center; gap:10px; min-width:220px; color:var(--muted); font-weight:600 }
+    input[type="range"]{
+      -webkit-appearance:none; width:190px; height:6px; border-radius:8px; background:#ffffff25; outline:none
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+      background: linear-gradient(135deg,var(--prim),var(--sec)); border:2px solid #fff9; box-shadow:0 2px 8px rgba(0,0,0,.35)
+    }
+
+    /* Equalizer animation */
+    .eq{ display:flex; gap:6px; align-items:flex-end; height:48px; padding:0 4px }
+    .bar{ width:6px; background: linear-gradient(180deg, var(--prim), var(--sec)); border-radius:3px; opacity:.9;
+      animation: bounce 1.2s infinite ease-in-out; transform-origin: bottom }
+    .bar:nth-child(2){ animation-delay:.1s }
+    .bar:nth-child(3){ animation-delay:.2s }
+    .bar:nth-child(4){ animation-delay:.3s }
+    .bar:nth-child(5){ animation-delay:.4s }
+    @keyframes bounce{
+      0%,100%{ height:14% }
+      40%{ height:90% }
+      70%{ height:35% }
+    }
+
+    .footer{
+      padding:16px 22px; display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:.92rem
+    }
+    .link{ color:#fff; text-decoration:underline dotted; text-underline-offset:3px }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="logo">
+        <!-- posa aquí el teu logo si vols hostejar-lo -->
+        <img src="https://i.imgur.com/2m8YF8q.png" alt="CEFS Manlleu" onerror="this.style.display='none'">
+      </div>
+      <div class="titles">
+        <div class="club">CEFS MANLLEU · Ràdio</div>
+        <div class="tag">🎙️ Emissió en directe</div>
+      </div>
+    </div>
+
+    <div class="now">
+      <div class="dot" id="liveDot" title="en directe"></div>
+      <div class="song" id="nowTitle"><strong>Carregant pista…</strong></div>
+    </div>
+
+    <div class="player">
+      <div class="controls">
+        <button class="btn" id="playBtn" aria-label="Reprodueix / Pausa">
+          <span class="icon">
+            <span class="play"></span>
+            <span class="pause"></span>
+          </span>
+        </button>
+        <div class="eq" aria-hidden="true">
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+        <div class="vol">
+          🔊 Volum
+          <input id="vol" type="range" min="0" max="1" step="0.01" value="0.85">
+        </div>
+      </div>
+      <div style="text-align:right;color:var(--muted);font-weight:600">
+        Estat: <span id="state">Parat</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Codec: MP3 · 128 kbps (recomanat)</span>
+      <span>© CEFS Manlleu</span>
+    </div>
+  </div>
+
+  <!-- Àudio -->
+  <audio id="radio" preload="none" crossorigin="anonymous"></audio>
+
+  <script>
+    // === CONFIGURA AQUI ===
+    const STREAM_URL = "https://sonic2.sistemahost.es:8120/stream"; // el teu stream
+    /*
+     * NOWPLAYING_URL:
+     * 1) SonicPanel → “JSON Output (PHP – API)” → copia l’enllaç “NowPlaying/Current Song”
+     *    (sol tenir CORS permès). Exemple fictici:
+     *    https://sonic2.sistemahost.es/api/nowplaying.php?port=8120&json=1
+     * 2) Alternativa Icecast (pot fallar per CORS segons servidor):
+     *    https://sonic2.sistemahost.es:8120/status-json.xsl
+     */
+    const NOWPLAYING_URL = ""; // <-- posa aquí la teva URL JSON si en tens
+
+    // === LÒGICA PLAYER ===
+    const audio = document.getElementById('radio');
+    const playBtn = document.getElementById('playBtn');
+    const vol = document.getElementById('vol');
+    const txt = document.getElementById('state');
+    const now = document.getElementById('nowTitle');
+
+    audio.src = STREAM_URL;
+    audio.volume = parseFloat(vol.value);
+
+    // Autoplay friendly (user gesture)
+    playBtn.addEventListener('click', async () => {
+      if (audio.paused) {
+        try {
+          await audio.play();
+          playBtn.classList.add('playing');
+          txt.textContent = 'En reproducció';
+        } catch (e) {
+          txt.textContent = 'Error: prem de nou per permetre reproducció';
+          console.warn(e);
+        }
+      } else {
+        audio.pause();
+        playBtn.classList.remove('playing');
+        txt.textContent = 'Pausat';
+      }
+    });
+
+    vol.addEventListener('input', () => audio.volume = parseFloat(vol.value));
+    audio.addEventListener('waiting', () => txt.textContent = 'Buferejant…');
+    audio.addEventListener('playing', () => txt.textContent = 'En reproducció');
+    audio.addEventListener('error', () => txt.textContent = 'Error de reproducció');
+
+    // === TÍTOL DE LA CANÇÓ (polling) ===
+    async function fetchNowPlaying(){
+      if(!NOWPLAYING_URL){ now.innerHTML = "<strong>En directe</strong> – CEFS Manlleu Ràdio"; return; }
+      try{
+        const res = await fetch(NOWPLAYING_URL, { cache: "no-store" });
+        const data = await res.json();
+        // Intents de mapatge segons API
+        let title = null;
+
+        // 1) SonicPanel NowPlaying variants comuns
+        if (data && (data.now_playing || data.title || data.song || data.current_song)) {
+          title = data.now_playing?.song ?? data.title ?? data.song ?? data.current_song;
+          if (typeof title === 'object' && title.title) title = title.title;
+        }
+
+        // 2) Icecast status-json.xsl
+        if (!title && data && data.icestats){
+          const src = Array.isArray(data.icestats.source) ? data.icestats.source[0] : data.icestats.source;
+          title = src?.title || src?.artist ? `${src.artist ?? ""} - ${src.title ?? ""}`.trim() : null;
+        }
+
+        now.textContent = title ? `Ara sona: ${title}` : "En directe – CEFS Manlleu Ràdio";
+      }catch(err){
+        now.textContent = "En directe – CEFS Manlleu Ràdio";
+        console.warn("No es pot llegir el títol ara:", err);
+      }
+    }
+    fetchNowPlaying();
+    setInterval(fetchNowPlaying, 15000);
+  </script>
+</body>
+</html>
