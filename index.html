@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CEFS Manlleu · Ràdio en directe</title>
+  <title>CEFS Manlleu</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root{
@@ -108,11 +108,11 @@
     <div class="header">
       <div class="logo">
         <!-- posa aquí el teu logo si vols hostejar-lo -->
-        <img src="https://i.imgur.com/2m8YF8q.png" alt="CEFS Manlleu" onerror="this.style.display='none'">
+        <img src="https://files.fcf.cat/escudos/clubes/escudos/00100_0000653585_manlleufs_200x200.png" alt="CEFS Manlleu" onerror="this.style.display='none'">
       </div>
       <div class="titles">
-        <div class="club">CEFS MANLLEU · Ràdio</div>
-        <div class="tag">🎙️ Emissió en directe</div>
+        <div class="club">CEFS MANLLEU</div>
+        <div class="tag" id="nowTitle">🎵 Carregant...</div>
       </div>
     </div>
 
@@ -198,34 +198,46 @@
     audio.addEventListener('error', () => txt.textContent = 'Error de reproducció');
 
     // === TÍTOL DE LA CANÇÓ (polling) ===
-    async function fetchNowPlaying(){
-      if(!NOWPLAYING_URL){ now.innerHTML = "<strong>En directe</strong> – CEFS Manlleu Ràdio"; return; }
-      try{
-        const res = await fetch(NOWPLAYING_URL, { cache: "no-store" });
-        const data = await res.json();
-        // Intents de mapatge segons API
-        let title = null;
+    <script>
+const now = document.getElementById('nowTitle');
 
-        // 1) SonicPanel NowPlaying variants comuns
-        if (data && (data.now_playing || data.title || data.song || data.current_song)) {
-          title = data.now_playing?.song ?? data.title ?? data.song ?? data.current_song;
-          if (typeof title === 'object' && title.title) title = title.title;
-        }
+// URLs: ajusta el host/puerto si cambian
+const ICECAST_STATUS = 'https://sonic2.sistemahost.es:8120/status-json.xsl';
+const SHOUTCAST_STATUS = 'https://sonic2.sistemahost.es:8120/stats?json=1';
 
-        // 2) Icecast status-json.xsl
-        if (!title && data && data.icestats){
-          const src = Array.isArray(data.icestats.source) ? data.icestats.source[0] : data.icestats.source;
-          title = src?.title || src?.artist ? `${src.artist ?? ""} - ${src.title ?? ""}`.trim() : null;
-        }
+async function fetchIcecast() {
+  const r = await fetch(ICECAST_STATUS, { cache: 'no-store' });
+  const d = await r.json();
+  const src = d?.icestats?.source;
+  let title = '';
+  if (Array.isArray(src)) title = src[0]?.title || '';
+  else title = src?.title || '';
+  return title;
+}
 
-        now.textContent = title ? `Ara sona: ${title}` : "En directe – CEFS Manlleu Ràdio";
-      }catch(err){
-        now.textContent = "En directe – CEFS Manlleu Ràdio";
-        console.warn("No es pot llegir el títol ara:", err);
-      }
+async function fetchShoutcast() {
+  const r = await fetch(SHOUTCAST_STATUS, { cache: 'no-store' });
+  const d = await r.json();
+  // Shoutcast v2
+  return d?.songtitle || d?.currenttrack || '';
+}
+
+async function updateNowPlaying() {
+  try {
+    let title = await fetchIcecast();
+    if (!title) {
+      // fallback a Shoutcast si no hay título en Icecast
+      title = await fetchShoutcast();
     }
-    fetchNowPlaying();
-    setInterval(fetchNowPlaying, 15000);
-  </script>
+    now.textContent = title ? '🎵 ' + title : '🎵 En directe';
+  } catch (e) {
+    now.textContent = '🎵 En directe';
+    console.warn('No es pot llegir el títol:', e);
+  }
+}
+
+updateNowPlaying();
+setInterval(updateNowPlaying, 15000);
+</script>
 </body>
 </html>
