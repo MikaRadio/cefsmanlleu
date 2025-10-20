@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CEFS Manlleu · Ràdio en directe</title>
+  <title>CEFS Manlleu</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root{
@@ -111,7 +111,7 @@
         <img src="https://i.imgur.com/2m8YF8q.png" alt="CEFS Manlleu" onerror="this.style.display='none'">
       </div>
       <div class="titles">
-        <div class="club">CEFS MANLLEU · Ràdio</div>
+        <div class="club">CEFS MANLLEU/div>
         <div class="tag">🎙️ Emissió en directe</div>
       </div>
     </div>
@@ -187,45 +187,99 @@
         }
       } else {
         audio.pause();
-        playBtn.classList.remove('playing');
-        txt.textContent = 'Pausat';
-      }
-    });
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CEFS Manlleu · Ràdio en directe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --groc: #f7b500;
+      --vermell: #d21f3c;
+      --fons: #0b0f14;
+      --text: #eef2f5;
+    }
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: radial-gradient(circle, #111 0%, #000 100%);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+    .logo img {
+      width: 180px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    h1 {
+      color: var(--groc);
+      margin: 10px 0 0;
+    }
+    h2 {
+      color: var(--vermell);
+      font-size: 1.2em;
+      margin: 5px 0 20px;
+    }
+    audio {
+      margin-top: 20px;
+      width: 90%;
+      max-width: 320px;
+    }
+    #nowTitle {
+      font-size: 1.1em;
+      margin-top: 10px;
+      color: var(--groc);
+    }
+    footer {
+      margin-top: 25px;
+      font-size: 0.8em;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">
+    <!-- substitueix l’enllaç per la teva imatge -->
+    <img src="https://i.imgur.com/2m8YF8q.png" alt="Logo CEFS Manlleu">
+  </div>
+  <h1>CEFS Manlleu</h1>
+  <h2>📻 Emissió en directe</h2>
 
-    vol.addEventListener('input', () => audio.volume = parseFloat(vol.value));
-    audio.addEventListener('waiting', () => txt.textContent = 'Buferejant…');
-    audio.addEventListener('playing', () => txt.textContent = 'En reproducció');
-    audio.addEventListener('error', () => txt.textContent = 'Error de reproducció');
+  <audio controls autoplay>
+    <source src="https://sonic2.sistemahost.es:8120/stream" type="audio/mpeg">
+    El teu navegador no suporta l'àudio en streaming.
+  </audio>
 
-    // === TÍTOL DE LA CANÇÓ (polling) ===
-    async function fetchNowPlaying(){
-      if(!NOWPLAYING_URL){ now.innerHTML = "<strong>En directe</strong> – CEFS Manlleu Ràdio"; return; }
-      try{
-        const res = await fetch(NOWPLAYING_URL, { cache: "no-store" });
-        const data = await res.json();
-        // Intents de mapatge segons API
-        let title = null;
+  <div id="nowTitle"><strong>Carregant...</strong></div>
 
-        // 1) SonicPanel NowPlaying variants comuns
-        if (data && (data.now_playing || data.title || data.song || data.current_song)) {
-          title = data.now_playing?.song ?? data.title ?? data.song ?? data.current_song;
-          if (typeof title === 'object' && title.title) title = title.title;
-        }
+  <footer>
+    💛❤️ Som-hi Manlleu! · emissió oficial del CEFS Manlleu
+  </footer>
 
-        // 2) Icecast status-json.xsl
-        if (!title && data && data.icestats){
-          const src = Array.isArray(data.icestats.source) ? data.icestats.source[0] : data.icestats.source;
-          title = src?.title || src?.artist ? `${src.artist ?? ""} - ${src.title ?? ""}`.trim() : null;
-        }
-
-        now.textContent = title ? `Ara sona: ${title}` : "En directe – CEFS Manlleu Ràdio";
-      }catch(err){
-        now.textContent = "En directe – CEFS Manlleu Ràdio";
-        console.warn("No es pot llegir el títol ara:", err);
+  <script>
+    async function updateSong() {
+      try {
+        const response = await fetch("https://sonic2.sistemahost.es:8120/status-json.xsl");
+        const data = await response.json();
+        const title = data.icestats.source.title || "En directe";
+        document.getElementById("nowTitle").textContent = title;
+      } catch (e) {
+        document.getElementById("nowTitle").textContent = "—";
       }
     }
-    fetchNowPlaying();
-    setInterval(fetchNowPlaying, 15000);
+    updateSong();
+    setInterval(updateSong, 10000);
   </script>
 </body>
 </html>
