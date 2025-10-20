@@ -218,26 +218,77 @@ async function fetchIcecast() {
 async function fetchShoutcast() {
   const r = await fetch(SHOUTCAST_STATUS, { cache: 'no-store' });
   const d = await r.json();
-  // Shoutcast v2
-  return d?.songtitle || d?.currenttrack || '';
-}
+<script>
+  // === CONFIG ===
+  const STREAM_URL = "https://sonic2.sistemahost.es:7059/stream"; // SSL
+  // Si algún día te dan una URL JSON de "Now Playing", ponla aquí:
+  const NOWPLAYING_URL = ""; 
 
-async function updateNowPlaying() {
-  try {
-    let title = await fetchIcecast();
-    if (!title) {
-      // fallback a Shoutcast si no hay título en Icecast
-      title = await fetchShoutcast();
+  // === DOM ===
+  const audio = document.getElementById('radio');
+  const playBtn = document.getElementById('playBtn');
+  const vol = document.getElementById('vol');
+  const txt = document.getElementById('state');
+  const nowEl = document.getElementById('nowSong');
+
+  // Setup player
+  audio.src = STREAM_URL;
+  audio.volume = parseFloat(vol.value);
+
+  playBtn.addEventListener('click', async () => {
+    if (audio.paused) {
+      try {
+        await audio.play();
+        playBtn.classList.add('playing');
+        txt.textContent = 'En reproducció';
+      } catch (e) {
+        txt.textContent = 'Error: prem de nou per permetre reproducció';
+        console.warn(e);
+      }
+    } else {
+      audio.pause();
+      playBtn.classList.remove('playing');
+      txt.textContent = 'Pausat';
     }
-    now.textContent = title ? '🎵 ' + title : '🎵 En directe';
-  } catch (e) {
-    now.textContent = '🎵 En directe';
-    console.warn('No es pot llegir el títol:', e);
-  }
-}
+  });
 
-updateNowPlaying();
-setInterval(updateNowPlaying, 15000);
+  vol.addEventListener('input', () => audio.volume = parseFloat(vol.value));
+  audio.addEventListener('waiting', () => txt.textContent = 'Buferejant…');
+  audio.addEventListener('playing', () => txt.textContent = 'En reproducció');
+  audio.addEventListener('error', () => txt.textContent = 'Error de reproducció');
+
+  // === NOW PLAYING ===
+  const ICECAST_STATUS = "https://sonic2.sistemahost.es:7059/status-json.xsl"; // SSL també
+
+  async function fetchIcecast() {
+    const r = await fetch(ICECAST_STATUS, { cache: 'no-store' });
+    const d = await r.json();
+    const src = d?.icestats?.source;
+    if (Array.isArray(src)) return src[0]?.title || '';
+    return src?.title || '';
+  }
+
+  async function fetchNowPlaying() {
+    try {
+      let title = '';
+      // 1) Si algún día usas NOWPLAYING_URL propio:
+      if (NOWPLAYING_URL) {
+        const r = await fetch(NOWPLAYING_URL, { cache: 'no-store' });
+        const d = await r.json();
+        title = d?.now_playing?.song || d?.song || '';
+      }
+      // 2) Icecast status como fallback / principal
+      if (!title) title = await fetchIcecast();
+
+      nowEl.textContent = title ? `🎵 ${title}` : '🎵 En directe';
+    } catch (e) {
+      nowEl.textContent = '🎵 En directe';
+      console.warn('No es pot llegir el títol:', e);
+    }
+  }
+
+  fetchNowPlaying();
+  setInterval(fetchNowPlaying, 15000);
 </script>
 </body>
 </html>
