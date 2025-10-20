@@ -1,118 +1,155 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ca">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CEFS Manlleu · Ràdio en directe</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#0b0f14;
-      --glass:#101722cc;
-      --stroke:linear-gradient(135deg,#f7b500, #d21f3c);
-      --text:#eef2f5;
-      --muted:#9fb0c3;
-      --ok:#2ad37a;
-      --warn:#ffb703;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-      color:var(--text); background: radial-gradient(1200px 800px at 20% -10%, #16212e 0%, transparent 60%),
-                          radial-gradient(1000px 700px at 120% 120%, #1c1326 0%, transparent 60%),
-                          var(--bg);
-      display:grid; place-items:center; padding:22px;
-    }
-    .card{
-      width:min(920px,95vw); position:relative;
-      padding:28px 28px 24px; border-radius:24px;
-      background: backdrop-filter: blur(10px);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      box-shadow: 0 20px 50px rgba(0,0,0,.45);
-    }
-    .card::before{
-      content:""; position:absolute; inset:0; padding:2px; border-radius:24px;
-      background: var(--stroke); -webkit-mask:
-        linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor; mask-composite: exclude;
-      pointer-events:none;
-    }
-    .row{display:flex; gap:18px; align-items:center; flex-wrap:wrap}
-    .logo{width:96px; height:96px; border-radius:18px; overflow:hidden; flex:0 0 auto;
-      background:#111; display:grid; place-items:center}
-    .logo img{width:100%; height:100%; object-fit:cover}
-    h1{margin:0; font-size:clamp(26px,5vw,40px); line-height:1.05; font-weight:800; letter-spacing:.3px}
-    .tag{display:flex; align-items:center; gap:10px; color:#ffdede; font-weight:600; margin-top:6px}
-    .dot{width:12px; height:12px; border-radius:999px; background:var(--ok);
-      box-shadow:0 0 12px 2px var(--ok)}
-    .now{display:flex; align-items:center; gap:12px; margin:18px 0 6px; color:var(--muted)}
-    .song{font-size:clamp(16px,3.4vw,20px); color:#fff; white-space:nowrap; overflow:hidden}
-    .song span{display:inline-block; padding-left:100%; animation:marq 15s linear infinite}
-    @keyframes marq{to{transform:translateX(-100%)}}
-    .player{display:flex; align-items:center; gap:14px; margin-top:8px}
-    .btn{
-      border:0; border-radius:14px; padding:12px 16px; font-weight:700; cursor:pointer;
-      background:#ffffff14; color:#fff;
-    }
-    .btn:hover{background:#ffffff22}
-    audio{width:100%; accent-color:#f7b500}
-    footer{margin-top:18px; color:var(--muted); font-size:14px}
-    .tiny{font-size:12px; opacity:.8}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CEFS Manlleu — Ràdio en directe</title>
+<meta name="theme-color" content="#000000" />
+<style>
+  :root{
+    --bg:#0b0b10;--card:#12121a;--txt:#e9f1ff;--muted:#8ea3c2;
+    --acc:#39d0ff;--acc2:#00ffa3;--danger:#ff4d6d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 20% -10%, #1a2335 0%, #0b0b10 60%), #0b0b10;color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+  .wrap{max-width:880px;margin:32px auto;padding:16px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  h1{font-size:28px;margin:0 0 8px}
+  .sub{color:var(--muted);margin:0 0 18px}
+  .row{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+  .grow{flex:1 1 240px}
+  .btn{cursor:pointer;border:0;border-radius:12px;padding:12px 18px;font-weight:700;
+       color:#001018;background:linear-gradient(90deg,var(--acc),var(--acc2));
+       box-shadow:0 6px 18px rgba(57,208,255,.35);transition:.2s transform}
+  .btn:active{transform:scale(.98)}
+  .muted{color:var(--muted)}
+  .pill{display:inline-flex;gap:8px;align-items:center;
+        border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:8px 12px;background:rgba(0,0,0,.25)}
+  .track{font-size:18px;font-weight:700}
+  .eq{display:inline-flex;gap:3px;height:18px}
+  .bar{width:3px;background:linear-gradient(var(--acc),var(--acc2));border-radius:2px;animation:vu 1.1s ease-in-out infinite}
+  .bar:nth-child(2){animation-duration:1.0s}.bar:nth-child(3){animation-duration:1.25s}
+  .bar:nth-child(4){animation-duration:.9s}.bar:nth-child(5){animation-duration:1.15s}
+  @keyframes vu{0%{height:20%}50%{height:100%}100%{height:25%}}
+  .vol{width:160px}
+  audio{width:100%;height:40px;margin-top:10px}
+  footer{opacity:.7;margin-top:22px;font-size:13px}
+  .err{color:var(--danger);font-weight:700}
+</style>
 </head>
 <body>
+<div class="wrap">
   <div class="card">
+    <h1>CEFS Manlleu — Escolta en directe</h1>
+    <p class="sub">Emissió oficial del club. Música i locució en directe.</p>
+
     <div class="row">
-      <div class="logo">
-        <!-- 🔁 CANVIA A LA URL REAL DEL LOGO -->
-        <img src="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" alt="CEFS Manlleu">
-      </div>
-      <div>
-        <h1>CEFS Manlleu</h1>
-        <div class="tag"><span class="dot"></span> Emissió en directe</div>
-      </div>
+      <button id="playBtn" class="btn">▶ Reproduir</button>
+      <label class="pill">
+        🔊 Volum
+        <input id="vol" class="vol" type="range" min="0" max="1" step="0.01" value="1">
+      </label>
+      <span id="state" class="muted pill">⏸ Aturat</span>
     </div>
 
-    <div class="now">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M3 9v6h4l5 5V4L7 9H3zM16 12c0-1.77-1.02-3.29-2.5-4.03v8.06A4.495 4.495 0 0 0 16 12zm1.5 0c0 2.48-1.51 4.6-3.67 5.46v1.74C17.91 18.77 20 15.64 20 12s-2.09-6.77-5.17-7.2v1.74C16.99 7.4 18.5 9.52 18.5 12z"/>
-      </svg>
-      <div id="nowTitle" class="song"><span>Carregant…</span></div>
+    <div style="margin-top:16px" class="row">
+      <div class="grow">
+        <div class="muted" style="margin-bottom:6px">Ara sona</div>
+        <div class="track" id="now">—</div>
+      </div>
+      <div class="pill">
+        <div class="eq" aria-hidden="true">
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+        <span class="muted">metadades</span>
+      </div>
+      <button id="refresh" class="btn" style="background:linear-gradient(90deg,#ffd43b,#ffa94d);box-shadow:none;color:#2b1700">↻ Actualitza</button>
     </div>
 
-    <div class="player">
-      <audio id="player" controls preload="none">
-        <source src="https://sonic2.sistemahost.es:8120/stream" type="audio/mpeg">
-      </audio>
-    </div>
+    <audio id="player" crossorigin="anonymous"></audio>
 
     <footer>
-      💛❤️ Som-hi Manlleu! · <span class="tiny">emissió oficial del CEFS Manlleu</span>
+      <span id="metaStatus" class="muted">Actualitzant títol cada 10 s…</span>
     </footer>
   </div>
+</div>
 
-  <script>
-    // Llegeix el títol actual de l’Icecast
-    async function updateSong(){
-      const el = document.getElementById('nowTitle');
-      try{
-        const res = await fetch('https://sonic2.sistemahost.es:8120/status-json.xsl', {cache:'no-store'});
-        const data = await res.json();
-        const src = data?.icestats?.source;
-        const title = (Array.isArray(src)?src[0]:src)?.title || 'En directe';
-        // si és molt llarg, fem marquee
-        const safe = (title || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        el.innerHTML = '<span>'+safe+'</span>';
-        // si és curt, parem l’animació
-        const span = el.querySelector('span');
-        if(safe.length < 38){ span.style.animation = 'none'; span.style.paddingLeft = '0'; }
-      }catch(e){
-        el.innerHTML = '<span>—</span>';
+<script>
+/*** 👇 CONFIG ***/
+const STREAM_URL  = "http://sonic2.sistemahost.es:8120/stream"; // canvia a https si el teu pla ho admet
+const STATUS_URLS = [
+  // Icecast (global)
+  "http://sonic2.sistemahost.es:8120/status-json.xsl",
+  // Icecast mount específic (si cal)
+  "http://sonic2.sistemahost.es:8120/status-json.xsl?mount=/stream",
+  // Shoutcast v2 (sid 1)
+  "http://sonic2.sistemahost.es:8120/stats?sid=1&json=1"
+];
+/***  END CONFIG ***/
+
+const a = document.getElementById('player');
+const btn = document.getElementById('playBtn');
+const st = document.getElementById('state');
+const now = document.getElementById('now');
+const vol = document.getElementById('vol');
+const metaStatus = document.getElementById('metaStatus');
+
+a.src = STREAM_URL + (STREAM_URL.includes("?") ? "&" : "?") + "t=" + Date.now(); // evitar cache
+a.preload = "none";
+
+btn.onclick = async () => {
+  try {
+    if (a.paused) { await a.play(); }
+    else { a.pause(); }
+  } catch(e) {
+    console.log(e);
+  }
+  renderState();
+};
+a.onplay = renderState; a.onpause = renderState; a.onwaiting = renderState; a.onplaying = renderState;
+function renderState(){
+  st.textContent = a.paused ? "⏸ Aturat" : "📡 En directe";
+  btn.textContent = a.paused ? "▶ Reproduir" : "⏸ Pausar";
+}
+vol.oninput = () => a.volume = vol.value;
+
+document.getElementById('refresh').onclick = () => { fetchTitle(true); };
+
+async function fetchTitle(manual=false){
+  let title = null, okUrl = null, detail="";
+  for (const url of STATUS_URLS){
+    try{
+      const r = await fetch(url, {mode:"cors"});
+      if (!r.ok) { detail = "HTTP "+r.status; continue; }
+      const data = await r.json().catch(()=>null);
+      if (!data) continue;
+
+      // Icecast (global)
+      if (data.icestats && data.icestats.source){
+        const src = Array.isArray(data.icestats.source) ? data.icestats.source.find(s => (s.listenurl||"").includes("/stream")) || data.icestats.source[0] : data.icestats.source;
+        title = src && (src.title || src.artist && src.title ? (src.artist+" - "+src.title) : src["artist"]||src["title"]);
+        okUrl = url; if (title) break;
       }
-    }
-    updateSong();
-    setInterval(updateSong, 10000);
-  </script>
+
+      // Shoutcast v2
+      if (data.streamtitle || (data.songtitle)){
+        title = data.streamtitle || data.songtitle;
+        okUrl = url; break;
+      }
+      if (data && data.data && data.data.songtitle){ // alguns proxies
+        title = data.data.songtitle; okUrl = url; break;
+      }
+    }catch(e){ /* segueix amb el següent */ }
+  }
+  now.textContent = title ? title : "—";
+  metaStatus.textContent = title
+    ? `Títol actualitzat · font: ${okUrl || 'desconeguda'}`
+    : `No s'ha pogut llegir el títol (pot ser restricció CORS o endpoint).`;
+  if (manual && !title) alert("No s'ha pogut llegir la cançó actual. El stream sona igualment.");
+}
+// refrescar cada 10 s
+setInterval(fetchTitle, 10000);
+fetchTitle();
+</script>
 </body>
 </html>
