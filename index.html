@@ -195,6 +195,7 @@
     audio.addEventListener('error',   () => { state.innerHTML = '<span class="err">Error de reproducció</span>'; setDotColor('--err'); });
 
     /* ====== NOW PLAYING (widget + fallbacks) ====== */
+    const MANUAL_TITLE = "EFS Palafolls - CEFS Manlleu 26/10 14:15 h";
     function readFromWidget(){
       const t  = document.getElementById('sonic_title')?.textContent?.trim();
       const ls = document.getElementById('sonic_listeners')?.textContent?.trim();
@@ -221,6 +222,12 @@
     }
 
     async function updateNowPlaying(){
+      if (typeof MANUAL_TITLE === "string" && MANUAL_TITLE.trim()) {
+  const t = MANUAL_TITLE.trim();
+  nowSong.textContent = t;
+  subtag.textContent  = "🎵 " + t;
+  return;
+}
       // 1) Widget
       let { title, listeners } = readFromWidget();
 
