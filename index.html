@@ -194,65 +194,70 @@
     audio.addEventListener('pause',   () => { state.textContent = 'Pausat'; setDotColor('--warn'); });
     audio.addEventListener('error',   () => { state.innerHTML = '<span class="err">Error de reproducció</span>'; setDotColor('--err'); });
 
-    /* ====== NOW PLAYING (widget + fallbacks) ====== */
-    const MANUAL_TITLE = "EFS Palafolls - CEFS Manlleu 26/10 14:15 h";
-    function readFromWidget(){
-      const t  = document.getElementById('sonic_title')?.textContent?.trim();
-      const ls = document.getElementById('sonic_listeners')?.textContent?.trim();
-      return { title: t || "", listeners: ls || "" };
-    }
+   <script>
+  // === NOW PLAYING desde SHOUTCAST con fallback al widget ===
+  const NOW_TEXT = document.getElementById('nowSong');   // línea del “Ara sona”
+  const SUBTAG   = document.getElementById('subtag');    // subtítulo bajo el logo
 
-    async function fetchIcecast(){
-      try{
-        const r = await fetch(ICECAST_STATUS, { cache:'no-store' });
+  // Endpoints posibles de Shoutcast v2 (probamos varios)
+  const SHC_HOST = 'https://sonic2.sistemahost.es:8120';
+  const SHC_JSONS = [
+    `${SHC_HOST}/stats?json=1`,
+    `${SHC_HOST}/statistics?json=1`,
+    `${SHC_HOST}/stats?sid=1&json=1`,
+    `${SHC_HOST}/statistics?sid=1&json=1`
+  ];
+
+  async function fetchShoutcastTitle() {
+    for (const url of SHC_JSONS) {
+      try {
+        const r = await fetch(url, { cache: 'no-store', mode: 'cors' });
+        // Si el servidor NO permite CORS, esta línea lanzará error -> pasamos al siguiente
         const d = await r.json();
-        const src = d?.icestats?.source;
-        const title = Array.isArray(src) ? (src[0]?.title || "") : (src?.title || "");
-        const listeners = Array.isArray(src) ? (src[0]?.listeners || "") : (src?.listeners || "");
-        return { title, listeners };
-      }catch{ return { title:"", listeners:"" } }
-    }
-
-    async function fetchShoutcast(){
-      try{
-        const r = await fetch(SHOUT_STATS, { cache:'no-store' });
-        const d = await r.json();
-        return { title: d?.songtitle || d?.currenttrack || "", listeners: d?.currentlisteners || "" };
-      }catch{ return { title:"", listeners:"" } }
-    }
-
-    async function updateNowPlaying(){
-      if (typeof MANUAL_TITLE === "string" && MANUAL_TITLE.trim()) {
-  const t = MANUAL_TITLE.trim();
-  nowSong.textContent = t;
-  subtag.textContent  = "🎵 " + t;
-  return;
-}
-      // 1) Widget
-      let { title, listeners } = readFromWidget();
-
-      // 2) Fallbacks si vacío
-      if(!title){
-        ({ title, listeners } = await fetchIcecast());
-      }
-      if(!title){
-        ({ title, listeners } = await fetchShoutcast());
-      }
-
-      if(title){
-        nowSong.textContent = title;
-        subtag.textContent  = '🎵 ' + title;
-      }else{
-        nowSong.textContent = 'En directe';
-        subtag.textContent  = '🎵 En directe';
-      }
-      if(listeners && listenersEl){
-        listenersEl.textContent = listeners;
+        // Distintas claves que suelen aparecer en Shoutcast v2
+        const title =
+          d?.songtitle ||
+          d?.currenttrack ||
+          d?.streamtitle ||
+          d?.streams?.[0]?.songtitle ||
+          d?.streams?.[0]?.currenttrack ||
+          '';
+        if (title && typeof title === 'string') return title.trim();
+      } catch (e) {
+        // Intentamos el siguiente endpoint
       }
     }
+    return '';
+  }
 
-    updateNowPlaying();
-    setInterval(updateNowPlaying, 5000);
-  </script>
+  function readWidgetTitle() {
+    // El widgets.js mete el texto en #sonic_title
+    const el = document.getElementById('sonic_title');
+    const t = el && el.textContent ? el.textContent.trim() : '';
+    return t;
+  }
+
+  async function updateNowPlaying() {
+    // 1) Intento Shoutcast JSON
+    let title = await fetchShoutcastTitle();
+
+    // 2) Fallback al widget si Shoutcast falla (CORS o endpoint distinto)
+    if (!title) title = readWidgetTitle();
+
+    // 3) Pinta en los dos sitios (subtítulo y “Ara sona”)
+    if (title) {
+      SUBTAG.textContent = `🎵 ${title}`;
+      NOW_TEXT.textContent = title;
+    } else {
+      SUBTAG.textContent = '🎵 En directe';
+      NOW_TEXT.innerHTML = '<strong>En directe</strong>';
+    }
+  }
+
+  // Primera carga + refresco cada 10 s
+  updateNowPlaying();
+  setInterval(updateNowPlaying, 10000);
+</script>
+
 </body>
 </html>
