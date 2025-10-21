@@ -194,7 +194,7 @@
     audio.addEventListener('pause',   () => { state.textContent = 'Pausat'; setDotColor('--warn'); });
     audio.addEventListener('error',   () => { state.innerHTML = '<span class="err">Error de reproducció</span>'; setDotColor('--err'); });
 
-   <script>
+
   // === NOW PLAYING desde SHOUTCAST con fallback al widget ===
   const NOW_TEXT = document.getElementById('nowSong');   // línea del “Ara sona”
   const SUBTAG   = document.getElementById('subtag');    // subtítulo bajo el logo
