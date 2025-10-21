@@ -21,6 +21,9 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
+     <div id="sonic_title" style="display:none"></div>
+<div id="sonic_listeners" style="display:none"></div>
+<div id="sonic_art" style="display:none"></div>
       margin:0; background:
         radial-gradient(1200px 600px at 80% -10%, #1b2533 0%, transparent 60%),
         radial-gradient(900px 500px at 0% 100%, #121b27 0%, transparent 60%),
@@ -208,40 +211,24 @@
     audio.addEventListener('error',   () => { state.innerHTML = '<span class="err">Error de reproducció</span>'; setDot('--err'); });
 
     // Now Playing
-    async function fetchFromIcecast(){
-      const r = await fetch(ICECAST_STATUS, { cache:'no-store' });
-      const d = await r.json();
-      const src = d?.icestats?.source;
-      if (Array.isArray(src)) return src[0]?.title || '';
-      return src?.title || '';
-    }
+    <script>
+  const nowEl = document.getElementById('nowTitle');
+  const listenersTarget = document.getElementById('liveListeners'); // opcional, si quieres mostrar oyentes
 
-    async function fetchFromCustom(){
-      if (!NOWPLAYING_URL) return '';
-      try{
-        const r = await fetch(NOWPLAYING_URL, { cache:'no-store' });
-        const d = await r.json();
-        // adapta segons el teu endpoint
-        return d?.now_playing?.song || d?.song || d?.title || '';
-      }catch{ return ''; }
-    }
+  function syncFromWidget(){
+    // Título
+    const t = document.getElementById('sonic_title')?.textContent?.trim();
+    if (t) nowEl.textContent = '🎵 ' + t;
 
-    async function updateNow(){
-      try{
-        let title = await fetchFromCustom();
-        if (!title) title = await fetchFromIcecast();
-        const txt = title ? `🎵 ${title}` : '🎵 En directe';
-        nowEl.textContent  = txt;
-        subtag.textContent = txt;
-      }catch(e){
-        nowEl.textContent  = '🎵 En directe';
-        subtag.textContent = '🎵 En directe';
-        console.warn('NP error:', e);
-      }
-    }
+    // Oyentes (opcional)
+    const ls = document.getElementById('sonic_listeners')?.textContent?.trim();
+    if (listenersTarget && ls) listenersTarget.textContent = ls;
+  }
 
-    updateNow();
-    setInterval(updateNow, 15000);
+  // Llamada inicial + refresco
+  syncFromWidget();
+  setInterval(syncFromWidget, 5000);
+</script>
   </script>
 </body>
 </html>
